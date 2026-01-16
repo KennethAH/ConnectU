@@ -1,6 +1,7 @@
 /*
  * PROJECT: CONNECT-U (Starter Code)
  * Course: ECE367L Data Structures & Algorithms
+ * Author: Kenneth Hironaka
  * 
  * SAFETY UPDATE:
  * The saveData() function call in main() is currently COMMENTED OUT.

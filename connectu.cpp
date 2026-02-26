@@ -51,22 +51,19 @@ public:
 
     // Task: Add a new post to the FRONT of the list (O(1))
     void addPost(int pid, int uid, string content, int likes, long time) {
-        Post* new_Post = new Post(pid, uid, content, likes, time);
-        new_Post->next = head;
-        head = new_Post;
+        Post* new_Post = new Post(pid, uid, content, likes, time); // Creates new post object
+        new_Post->next = head;  // Connects the new post to the head of the linked list
+        head = new_Post;  // The new post becomes the head of the linked list
     }
 
     void printTimeline() {
         Post* current = head;
         if (!current) { cout << "  (No posts yet)" << endl; return; }
-        // Task: Traverse the linked list and print content
         else {
-            for (Post* p = head; p != NULL; p = p->next){
-                cout << p->content << endl;
+            for (Post* p = head; p != NULL; p = p->next){  // Traverse the linked list
+                cout << p->content << endl;  // Print out the content of each post
             }
         }
-        
-
     }
 };
 
@@ -164,8 +161,15 @@ private:
     HashNode** table;
 
     unsigned long hashFunction(string key) {
-        // TODO: LAB 2
-        return 0; 
+        size_t hashValue = 0;
+        size_t base = 37;  // prime number
+        // Do a polynomial rolling hash through each character of the username
+        for(int i = 0; i < key.length(); i++){
+            unsigned char charVal = key[i];
+            hashValue = (hashValue*base + charVal) % TABLE_SIZE;
+        }
+
+        return (unsigned long) hashValue; 
     }
 
 public:
@@ -174,15 +178,27 @@ public:
         for (int i = 0; i < TABLE_SIZE; i++) table[i] = nullptr;
     }
 
-    void put(string key, User* user) { /* TODO: LAB 2 */ }
+    void put(string key, User* user) { 
+        unsigned long hash = hashFunction(key);  // Get the hash value of the username
+        HashNode* newNode = new HashNode(key,user);  // Create new user
+        newNode->next = table[hash];  // Add new user to the front of the LL at the index 
+        table[hash] = newNode;        // that equals the hash value
+    }
 
     User* get(string key) {
-        // --- TEMPORARY FALLBACK FOR LAB 1 ---
-        for(User* u : allUsers) {
-            if (u->username == key) return u;
+        unsigned long hash = hashFunction(key);
+        HashNode* curr = table[hash];  // Find the table enrty that corresponds
+                                       // with the hash value
+        // Loop through the LL until the node's key matches the key it is looking for
+        // and return that node's value (username)
+        while(curr != NULL){
+            if(curr->key == key){
+                return curr->value;
+            }
+            curr = curr->next;
         }
-        // TODO: LAB 2 - REPLACE ABOVE WITH HASH LOOKUP
-        return nullptr;
+
+        return nullptr;  // If the key is not found, return NULL 
     }
 };
 

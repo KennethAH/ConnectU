@@ -39,7 +39,9 @@ struct Post {
         
     // TODO: LAB 3 - Implement Scoring Logic
     double getScore() {
-        return 0.0; 
+        long hoursOld = (time(0) - timestamp)/3600.0;
+        double score = (likes * 10) + (1000/(hoursOld + 1)); 
+        return score; 
     }
 };
 
@@ -60,7 +62,7 @@ public:
         Post* current = head;
         if (!current) { cout << "  (No posts yet)" << endl; return; }
         else {
-            for (Post* p = head; p != NULL; p = p->next){  // Traverse the linked list
+            for (Post* p = head; p != nullptr; p = p->next){  // Traverse the linked list
                 cout << p->content << endl;  // Print out the content of each post
             }
         }
@@ -135,13 +137,63 @@ private:
     Post* heap[1000]; 
     int size;
 
-    void heapifyDown(int index) { /* TODO: LAB 3 */ }
-    void heapifyUp(int index) { /* TODO: LAB 3 */ }
+    void heapifyDown(int index) { 
+        int leftchild = 2*index + 1;
+        if(leftchild >= size){
+            return;
+        }
+        int bigchild = leftchild;
+        int rightchild = 2*index + 2;
+        if(rightchild < size){
+            if(heap[rightchild]->getScore() > heap[leftchild]->getScore()){
+                bigchild = rightchild;
+            }
+        }
+        if(heap[bigchild]->getScore() > heap[index]->getScore()){
+            Post *temp = heap[index];
+            heap[index] = heap[bigchild];
+            heap[bigchild] = temp;
+            heapifyDown(bigchild);
+        }
+        return;
+    }
+    void heapifyUp(int index) { 
+        if(index == 0){
+            return;
+        }
+        while(index != 0){
+            int parent = (int)((index-1)/2);
+            if(heap[index]->getScore() > heap[parent]->getScore()){
+                Post *temp = heap[parent];
+                heap[parent] = heap[index];
+                heap[index] = temp;
+                index = parent;
+            }else{
+                break;
+            }
+        }
+        return;
+    }
 
 public:
     FeedHeap() : size(0) {}
-    void push(Post* p) { /* TODO: LAB 3 */ }
-    Post* popMax() { return nullptr; /* TODO: LAB 3 */ }
+    void push(Post* p) {
+        heap[size] = p;
+        size++;
+        heapifyUp(size-1);
+    }
+    Post* popMax() {
+        if(size == 0){
+            return nullptr;
+        }
+        Post *maxPost = heap[0];
+        heap[0] = heap[size-1];
+        size--;
+        if(size != 0){
+            heapifyDown(0);
+        }
+        return maxPost;
+    }
     bool isEmpty() { return size == 0; }
 };
 
@@ -163,10 +215,12 @@ private:
     unsigned long hashFunction(string key) {
         size_t hashValue = 0;
         size_t base = 37;  // prime number
+        size_t basePow = 1;
         // Do a polynomial rolling hash through each character of the username
         for(int i = 0; i < key.length(); i++){
             unsigned char charVal = key[i];
-            hashValue = (hashValue*base + charVal) % TABLE_SIZE;
+            hashValue = (hashValue + charVal*basePow) % TABLE_SIZE;
+            basePow = (basePow * base) % TABLE_SIZE;
         }
 
         return (unsigned long) hashValue; 
@@ -187,18 +241,18 @@ public:
 
     User* get(string key) {
         unsigned long hash = hashFunction(key);
-        HashNode* curr = table[hash];  // Find the table enrty that corresponds
+        HashNode* curr = table[hash];  // Find the table entry that corresponds
                                        // with the hash value
         // Loop through the LL until the node's key matches the key it is looking for
-        // and return that node's value (username)
-        while(curr != NULL){
+        // and return that node's value (User profile)
+        while(curr != nullptr){
             if(curr->key == key){
                 return curr->value;
             }
             curr = curr->next;
         }
 
-        return nullptr;  // If the key is not found, return NULL 
+        return nullptr;  // If the key is not found, return nullptr 
     }
 };
 
@@ -425,11 +479,12 @@ void showUserDashboard(User* currentUser) {
             int count = 0;
             while(!feed.isEmpty() && count < 10) {
                 Post* top = feed.popMax();
-                if(top)
+                if(top){
                     cout << "  > [ID: " << top->postId << "] [Score: " << (int)top->getScore() << "] @" 
                          << allUsers[top->userId - 1]->username << ": " << top->content 
                          << " (" << top->likes << " likes)" << endl;
-                count++;
+                    count++;
+                }
             }
             if(count == 0) cout << "  No posts found." << endl;
             else {

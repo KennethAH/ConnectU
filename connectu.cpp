@@ -39,8 +39,8 @@ struct Post {
         
     // TODO: LAB 3 - Implement Scoring Logic
     double getScore() {
-        long hoursOld = (time(0) - timestamp)/3600.0;
-        double score = (likes * 10) + (1000/(hoursOld + 1)); 
+        double hoursOld = (time(0) - timestamp)/3600.0;  // Calculates number of hours old the post is
+        double score = (likes * 10) + (1000/(hoursOld + 1));  // Formula for scoring
         return score; 
     }
 };
@@ -139,17 +139,20 @@ private:
 
     void heapifyDown(int index) { 
         int leftchild = 2*index + 1;
-        if(leftchild >= size){
+        if(leftchild >= size){  // If the node does not have a left child
             return;
         }
         int bigchild = leftchild;
         int rightchild = 2*index + 2;
-        if(rightchild < size){
-            if(heap[rightchild]->getScore() > heap[leftchild]->getScore()){
+        if(rightchild < size){  // If the node has a right child
+            if(heap[rightchild]->getScore() > heap[leftchild]->getScore()){  // If the right child's score 
+                                                                             // is bigger than the left child's score
                 bigchild = rightchild;
             }
         }
-        if(heap[bigchild]->getScore() > heap[index]->getScore()){
+        // If the biggest child's score is greater than the current node's score,
+        // swap the nodes and check if the current node needs to be heapified down again
+        if(heap[bigchild]->getScore() > heap[index]->getScore()){   
             Post *temp = heap[index];
             heap[index] = heap[bigchild];
             heap[bigchild] = temp;
@@ -158,17 +161,19 @@ private:
         return;
     }
     void heapifyUp(int index) { 
-        if(index == 0){
+        if(index == 0){  // If node to heapifyUp is at the top of the heap, return
             return;
         }
         while(index != 0){
-            int parent = (int)((index-1)/2);
-            if(heap[index]->getScore() > heap[parent]->getScore()){
+            int parent = (int)((index-1)/2);  
+            // If the current node's score is higher than it's parent, swap the nodes
+            // and parent node becomes the new current node 
+            if(heap[index]->getScore() > heap[parent]->getScore()){ 
                 Post *temp = heap[parent];
                 heap[parent] = heap[index];
                 heap[index] = temp;
                 index = parent;
-            }else{
+            }else{  // No need to heapify up
                 break;
             }
         }
@@ -178,19 +183,19 @@ private:
 public:
     FeedHeap() : size(0) {}
     void push(Post* p) {
-        heap[size] = p;
-        size++;
-        heapifyUp(size-1);
+        heap[size] = p;  // Add post to the end of the heap
+        size++;  // Increment size
+        heapifyUp(size-1);  // Heapify up the appended post
     }
     Post* popMax() {
-        if(size == 0){
+        if(size == 0){  // If the array is empty
             return nullptr;
         }
-        Post *maxPost = heap[0];
-        heap[0] = heap[size-1];
+        Post *maxPost = heap[0];  // Save the post with the highest score
+        heap[0] = heap[size-1];  // Put the last post at the top of the heap
         size--;
-        if(size != 0){
-            heapifyDown(0);
+        if(size != 0){  // If the heap isn't empty after removing the post with the highest score
+            heapifyDown(0);  // Heapify down the last post at the top of the heap
         }
         return maxPost;
     }

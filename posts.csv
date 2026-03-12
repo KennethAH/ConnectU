@@ -25,3 +25,4 @@ post_id,user_id,content,likes,timestamp
 90024,11,This should save to posts.csv. Lab 1 done!,0,1770408225
 90025,11,Here is another post!,0,1770792564
 90026,11,Aloha World!,0,1770864535
+90027,11,Hi! Testing Lab 3 functionality.,1,1773087598

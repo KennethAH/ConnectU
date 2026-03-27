@@ -124,24 +124,25 @@ public:
 
 // BST Implementation
 BSTNode* FriendBST::insert(BSTNode* node, User* u) {
-    if(node == nullptr){
-        struct BSTNode* newFriend = new BSTNode(u);    
+    if(node == nullptr){  // Place to put the user was found
+        struct BSTNode* newFriend = new BSTNode(u);  // Create BSTNode for the user    
         return newFriend;
     };
     
-    if(u->username < node->user->username){
+    if(u->username < node->user->username){  // The user should go to the left of the current node
         node->left = insert(node->left, u);
-    }else if(u->username > node->user->username){
+    }else if(u->username > node->user->username){  // The user should go to the right of the current node
         node->right = insert(node->right, u);
     }
-    return node;
+    return node;  // Return the node if the user is already in the BST
 }
 void FriendBST::printInOrder(BSTNode* node) {
-    if(node == nullptr) return;
+    if(node == nullptr) return;  // Base case
 
-    printInOrder(node->left);
-    cout << node->user->username << endl;
-    printInOrder(node->right);
+    printInOrder(node->left);  // Process the left node
+    cout << node->user->username << endl;  // Process (print) the current node
+    printInOrder(node->right);  // Process the right node
+    return;
 }
 
 // TODO: LAB 3 - Max Heap

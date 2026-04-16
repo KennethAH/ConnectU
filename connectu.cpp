@@ -357,16 +357,21 @@ void recommendFriends(User* startUser) {
     }
 
     User* currentFriend;
-    while(directFriends.empty() == false){  // While the set is not empty
+    bool recommendedFriends = false;  
+    while(directFriends.empty() == false){ 
         currentFriend = directFriends.front();  // Set currentFriend to the user at the front of the queue
-        directFriends.pop();  // Remove currentFriend from the queue
+        directFriends.pop();  
         for(User* g : currentFriend->friends){  // For all of currentFriend's friends
             // If the user is not startUser and is not already friends or been recommended to startUser
             if(g != startUser && friendsSeen.find(g->userId) == friendsSeen.end()){
                 friendsSeen.insert(g->userId);  // Add the user's user id to the set
                 cout << g->username << endl;  // Print out the user's username as a recommendation
+                recommendedFriends = true;  // A friend recommendation has been found
             }
         }
+    }
+    if(recommendedFriends == false){  // Friend recommendations have not been found
+        cout << "We could not find any friend recommendations." << endl;
     }
     return;
 }

@@ -343,7 +343,32 @@ void addFriendship(User* requester, User* target) {
 // TODO: LAB 5 - Breadth First Search
 void recommendFriends(User* startUser) {
     cout << "\n[GRAPH ANALYSIS] Finding friends of friends..." << endl;
-    // TODO: LAB 5
+    if(startUser->friendTree.root == nullptr){  // Check if the user has any friends
+        cout << "You have no friends :(" << endl;
+        return;
+    }
+    
+    set<int> friendsSeen;  // Set for user IDs that are friends or have been recommended
+    queue<User*> directFriends;  // Queue for users that are direct friends of startUser
+    // For every direct friend, add them to the queue and their user ID to the set
+    for(User* f : startUser->friends){  
+        directFriends.push(f);
+        friendsSeen.insert(f->userId);
+    }
+
+    User* currentFriend;
+    while(directFriends.empty() == false){  // While the set is not empty
+        currentFriend = directFriends.front();  // Set currentFriend to the user at the front of the queue
+        directFriends.pop();  // Remove currentFriend from the queue
+        for(User* g : currentFriend->friends){  // For all of currentFriend's friends
+            // If the user is not startUser and is not already friends or been recommended to startUser
+            if(g != startUser && friendsSeen.find(g->userId) == friendsSeen.end()){
+                friendsSeen.insert(g->userId);  // Add the user's user id to the set
+                cout << g->username << endl;  // Print out the user's username as a recommendation
+            }
+        }
+    }
+    return;
 }
 
 // ==========================================

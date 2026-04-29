@@ -95,6 +95,8 @@ public:
         if (root == nullptr) cout << "  (No friends yet)" << endl;
         else printInOrder(root);
     }
+    BSTNode* findPredecessor(BSTNode* current);  // Forward Declaration
+    BSTNode* removeFriendBST(BSTNode* node, User* u);  // Forward Declaration   
 };
 
 class User {
@@ -114,11 +116,23 @@ public:
         timeline.addPost(pid, userId, content, likes, time);
     }
 
-    void addFriend(User* u) {
-        friends.push_back(u);       
-        friendTree.addFriend(u);    
+    bool addFriend(User* u) {
+        auto check = find(friends.begin(), friends.end(), u);
+        if (check == friends.end()){ // If not friends, add them
+            friends.push_back(u);
+            friendTree.addFriend(u);
+            return true;    
+        
+        }else{ // Already friends
+            return false;
+        }    
     }
     
+   void removeFriend(User* u){
+        friends.erase(remove(friends.begin(), friends.end(), u), friends.end());  // Remove u from friends vector
+        friendTree.root = friendTree.removeFriendBST(friendTree.root, u);  // Remove u from friends BST
+    }
+
     vector<User*> getFriendsList() { return friends; }
 };
 
@@ -143,6 +157,43 @@ void FriendBST::printInOrder(BSTNode* node) {
     cout << node->user->username << endl;  // Process (print) the current node
     printInOrder(node->right);  // Process the right node
     return;
+}
+
+BSTNode* FriendBST::findPredecessor(BSTNode* current){
+    current = current->left;  // Go to the left subtree
+    while(current != nullptr && current->right != nullptr){  // Find the largest value in the left subtree
+        current = current->right;
+    }
+    return current;
+}
+
+BSTNode* FriendBST::removeFriendBST(BSTNode* node, User* u){
+    if(node == nullptr){  // Base Case
+        return node;
+    }
+    BSTNode* current = node;
+    if(current->user->username > u->username){  // If the user is in the left subtree
+        current->left = removeFriendBST(current->left, u);
+    }else if(current->user->username < u->username){  // If the user is in the right subtree
+        current->right = removeFriendBST(current->right, u);
+    }else{
+        // If the user's node has no left child, delete the node and return it's right child
+        if(current->left == nullptr){ 
+            BSTNode* temp = current->right;
+            delete current;
+            return temp;
+        }
+        // If the user's node has no right child, delete the node and return it's left child
+        if(current->right == nullptr){    
+            BSTNode* temp = current->left;
+            delete current;
+            return temp;
+        }
+        BSTNode* predecessor = findPredecessor(current);
+        current->user = predecessor->user;  // Switch the data of the current and predecessor nodes
+        current->left = removeFriendBST(current->left, predecessor->user);  // Remove the predecessor node in the left subtree of current
+    }
+    return current;
 }
 
 // TODO: LAB 3 - Max Heap
@@ -336,8 +387,19 @@ void registerNewUser(string username, int tech, int art, int sport) {
 
 void addFriendship(User* requester, User* target) {
     requester->addFriend(target);
-    target->addFriend(requester);
-    cout << "\n[SUCCESS] You are now friends with @" << target->username << endl;
+    bool succeed = target->addFriend(requester);
+    if (succeed == true){
+        cout << "\n[SUCCESS] You are now friends with @" << target->username << endl;
+    }else{
+        cout << "\n[FAIL] You are already friends with @" << target->username << endl;
+    }
+}
+
+void removeFriendship(User* requester, User* target){
+    // Remove friend from both users' FriendBST
+    requester->removeFriend(target);
+    target->removeFriend(requester);
+    cout << "\n[SUCCESS] You are no longer friends with @" << target->username << endl;
 }
 
 // TODO: LAB 5 - Breadth First Search
@@ -482,7 +544,7 @@ void clearScreen() {
 
 void showUserDashboard(User* currentUser) {
     int choice = 0;
-    while (choice != 7) {
+    while (choice != 8) {
         cout << "\n--- Welcome, @" << currentUser->username << " ---" << endl;
         cout << "1. View My Post (Lab 1)" << endl;
         cout << "2. Create New Post (Lab 1)" << endl;
@@ -490,7 +552,8 @@ void showUserDashboard(User* currentUser) {
         cout << "4. Algorithmic Feed (Lab 3)" << endl;
         cout << "5. View Friends Sorted (Lab 4)" << endl;
         cout << "6. Get Friend Recommendations (Lab 5)" << endl;
-        cout << "7. Logout" << endl;
+        cout << "7. Remove Friend (Lab 6)" << endl;
+        cout << "8. Logout" << endl;
         cout << "Select >> ";
         cin >> choice;
 
@@ -554,21 +617,44 @@ void showUserDashboard(User* currentUser) {
              recommendFriends(currentUser);
         }
         else if (choice == 7) {
+            string friendName;
+            cout << "Enter username to remove: "; cin >> friendName;  // Get the friend to remove
+            User* target = userMap.get(friendName);  // Find the friend in the userMap
+            vector<User*> userFriends = currentUser->friends;
+            if(find(userFriends.begin(), userFriends.end(), target) == userFriends.end()){  // If the user target was not found in the friends vector
+                cout << "This user was not found in your friends list." << endl;
+            }else{
+                removeFriendship(currentUser, target);  // Remove the friendship if the target was found in the friends vector
+            }
+        }
+        else if (choice == 8) {
             cout << "Logging out..." << endl;
+        }
+        else{
+            cout << "\nPlease pick a valid option" << endl;
         }
     }
 }
 
 void showMainMenu() {
-    int choice = 0;
+    float choice = 0; //changed for sanitization
     while (choice != 3) {
         cout << "\n=== CONNECT-U ===" << endl;
         cout << "1. Login" << endl;
         cout << "2. Register" << endl;
         cout << "3. Exit & Save" << endl;
         cout << "Select >> ";
-        cin >> choice;
+        
+        cin  >> choice;
+        choice = (int) choice; //forces it to be int
 
+        if (cin.fail()) { //input sanitation, cin must be integer
+            cout << "Invalid input! Expected an integer." << endl;
+            cin.clear(); //clear flags
+            cin.ignore(numeric_limits<streamsize>::max(),'\n');
+            choice = 0; //start over
+            continue;
+    }
         if (choice == 1) {
             string username;
             cout << "Username: "; cin >> username;
@@ -586,6 +672,8 @@ void showMainMenu() {
         else if (choice == 3) {
             saveData(); 
             cout << "Goodbye! " << endl;
+        }else{
+            cout << "\nPlease pick a valid option" << endl;
         }
     }
 }

@@ -97,6 +97,7 @@ public:
     }
     BSTNode* findPredecessor(BSTNode* current);  // Forward Declaration
     BSTNode* removeFriendBST(BSTNode* node, User* u);  // Forward Declaration   
+    BSTNode* findFriend(BSTNode* node, User* u);  // Forward Declaration
 };
 
 class User {
@@ -194,6 +195,21 @@ BSTNode* FriendBST::removeFriendBST(BSTNode* node, User* u){
         current->left = removeFriendBST(current->left, predecessor->user);  // Remove the predecessor node in the left subtree of current
     }
     return current;
+}
+
+BSTNode* FriendBST::findFriend(BSTNode* node, User* u){
+    if(node == nullptr){  // Base Case or friend could not be found
+        return node;
+    }
+
+    BSTNode* current = node;
+    if(current->user->username > u->username){  // If the user is in the left subtree
+        return removeFriendBST(current->left, u);
+    }else if(current->user->username < u->username){  // If the user is in the right subtree
+        return removeFriendBST(current->right, u);
+    }else{  // The user has been found in the tree
+        return current;
+    }
 }
 
 // TODO: LAB 3 - Max Heap
@@ -544,7 +560,7 @@ void clearScreen() {
 
 void showUserDashboard(User* currentUser) {
     int choice = 0;
-    while (choice != 8) {
+    while (choice != 9) {
         cout << "\n--- Welcome, @" << currentUser->username << " ---" << endl;
         cout << "1. View My Post (Lab 1)" << endl;
         cout << "2. Create New Post (Lab 1)" << endl;
@@ -552,8 +568,9 @@ void showUserDashboard(User* currentUser) {
         cout << "4. Algorithmic Feed (Lab 3)" << endl;
         cout << "5. View Friends Sorted (Lab 4)" << endl;
         cout << "6. Get Friend Recommendations (Lab 5)" << endl;
-        cout << "7. Remove Friend (Lab 6)" << endl;
-        cout << "8. Logout" << endl;
+        cout << "7. Remove Friend (Initial Lab 6)" << endl;
+        cout << "8. Find Friend Info (Lab 6 Redo)" << endl;
+        cout << "9. Logout" << endl;
         cout << "Select >> ";
         cin >> choice;
 
@@ -628,6 +645,28 @@ void showUserDashboard(User* currentUser) {
             }
         }
         else if (choice == 8) {
+            string friendName;
+            cout << "Enter username to search: "; cin >> friendName;  // Get the friend to search up
+            User* target = userMap.get(friendName);  // Find the friend in the userMap
+            bool isFriend = false;
+            if(target == nullptr){ // Invalid user
+                cout << "The username was invalid. Please try again." << endl;
+                continue;
+            // If the user was found in the currentUser's friend tree
+            }else if(currentUser->friendTree.findFriend(currentUser->friendTree.root, target) != nullptr){  
+                isFriend = true;    
+            }
+
+            cout << "\nInfo for @" << friendName << ":" << endl;
+            if(isFriend){
+                cout << "@" << friendName << " is currently your friend!" << endl;
+            }else{
+                cout << "@" << friendName << " is not currently your friend." << endl;
+            }
+            cout << "\n[@" << friendName << "'s POSTS]" << endl;
+            target->timeline.printTimeline();  // Print out friendName's posts
+        }
+        else if (choice == 9) {
             cout << "Logging out..." << endl;
         }
         else{
